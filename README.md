@@ -18,9 +18,6 @@ Leveraging data-driven analysis, the project will help optimize sourcing strateg
 8.Hired by Position: Tracks how many applications are received per position and how many successful hires are made, providing insights into position-specific recruitment success.
 
 ## **Dataset**
-This dataset taken from https://www.kaggle.com/datasets/saadharoon27/hr-analytics-dataset
-
-## **Dataset**
 This dataset taken from https://www.youtube.com/@AnalyticswithNags
 
 ##**Visualization**
