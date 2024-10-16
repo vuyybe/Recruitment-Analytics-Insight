@@ -1,0 +1,110 @@
+--POSITION 
+select * from recruitment
+--đếm sao bao nhiêu position nhận application và bao nhiêu position trúng tuyển
+select vacancy_name, count(Application_status ) as Application_per_position,
+count(case when joining_status = 'Yes' THEN 1 END) as hired_employee,
+count(case when Application_status = 'Screening' then 1 end) as screening_application
+from recruitment
+group by vacancy_name
+
+--Trong khoảng open days bao nhiêu ngày thì sẽ nhận được application và tuyển thành công
+SELECT 
+    CASE 
+        WHEN DATEDIFF(DAY, Open_Date, close_date) BETWEEN 0 AND 30 THEN '0-30'
+        WHEN DATEDIFF(DAY, Open_Date, close_date) BETWEEN 31 AND 60 THEN '31-60'
+        WHEN DATEDIFF(DAY, Open_Date, close_date) BETWEEN 61 AND 90 THEN '61-90'
+    END AS Open_date_group, 
+    COUNT(CASE WHEN Joining_Status = 'Yes' THEN 1 END) as hired_employee
+fROM 
+    Recruitment
+WHERE 
+    Close_date IS NOT NULL
+GROUP BY 
+    CASE 
+        WHEN DATEDIFF(DAY, Open_Date, close_date) BETWEEN 0 AND 30 THEN '0-30'
+        WHEN DATEDIFF(DAY, Open_Date, close_date) BETWEEN 31 AND 60 THEN '31-60'
+        WHEN DATEDIFF(DAY, Open_Date, close_date) BETWEEN 61 AND 90 THEN '61-90'
+    END;
+
+
+--Tình hình tuyển dụng mỗi tháng
+
+select CONCAT(YEAR(open_date), '-', MONTH(open_date)) AS year_month,
+count(case when Application_status = 'Screening' then 1 end) as Screening_round, 
+count(case when cleared_Technical_round = 'Yes' then 1 end) as Interviewed_1, 
+count(case when cleared_manager_round = 'Yes' THEN 1 END) as Interviewed_2,
+count(case when final_selection_status = 'Yes' then 1 end) as Final_selection,
+count(case when joining_status = 'Yes' then 1 end) as Joined
+from recruitment
+GROUP BY MONTH(open_date), year(open_date)
+ORDER BY MONTH(open_date), year(open_date)
+
+--Recruitment funnel 
+select count(*) as Total_Application,
+count(case when Application_status = 'Screening' then 1 end) as Screening_round, 
+count(case when cleared_Technical_round = 'Yes' then 1 end) as Interviewed_1, 
+count(case when cleared_manager_round = 'Yes' THEN 1 END) as Interviewed_2,
+count(case when final_selection_status = 'Yes' then 1 end) as Final_selection,
+count(case when joining_status = 'Yes' then 1 end) as Joined
+from recruitment
+
+-- total position
+select count(distinct vacancy_name) as Position_open
+from recruitment
+-- Average time to fill
+SELECT avg(DATEDIFF(day, open_date, Close_date)) AS Time_To_Fill, COUNT(*) AS Total_Hires, vacancy_name
+FROM recruitment
+WHERE Close_date IS NOT NULL
+GROUP BY DATEDIFF(day, open_date, Close_date), vacancy_name
+--Average time to fill
+SELECT avg(DATEDIFF(day, open_date, Close_date)) AS Time_To_Fill
+FROM recruitment
+WHERE Close_date IS NOT NULL
+--Count source with successfull hired
+SELECT source, COUNT(*) AS total_applications, 
+COUNT(CASE WHEN joining_status = 'Yes' THEN 1 END) AS total_hired,
+(COUNT(CASE WHEN joining_status = 'Yes' THEN 1 END) * 1.0) / COUNT(*) AS success_rate
+FROM recruitment
+GROUP BY source
+
+--Total cost to hire with agency
+select sum(CTC_Offered) *0.5 as total_cost_hired_agency
+from recruitment
+where joining_status = 'Yes'
+and source = 'Agency'
+-- Total cost to hire with referral
+select count(joining_status)*8000 as total_cost_hired_referral
+from recruitment
+where joining_status = 'Yes'
+and source = 'Referral'
+
+-- COST PER HIRE
+with t1 as (
+    SELECT count(case when joining_status = 'Yes' THEN 1 end) as hired_employee,
+    sum(case when source = 'Agency' and joining_status = 'Yes' then CTC_Offered  *0.05 else 0 end) as total_cost_hired_agency, -- trả cho agency 5%
+    count(case when source = 'referral' and joining_status = 'Yes' then 1 end)*8000 as total_cost_hired_referral -- mỗi referral thành công là 8000
+    FROM 
+    recruitment)
+,t2 as(
+    select hired_employee,
+    45000 + 54000 + COALESCE(total_cost_hired_agency, 0) + COALESCE(total_cost_hired_referral, 0) as total_cost --cost Naukri và cost Linkedln
+from t1
+) select total_cost, hired_employee, total_cost/hired_employee as Average_CTC from t2
+-- tính tỉ lệ hiring thành công theo giới tính
+SELECT 
+    gender,
+    COUNT(case when Application_Status = 'Screening' then 1 end) AS total_applications,
+    COUNT(CASE WHEN joining_status = 'Yes' THEN 1 END) AS total_hired,
+    (COUNT(CASE WHEN joining_status = 'Yes' THEN 1 END) * 1.0) / COUNT(*) AS hiring_success_rate
+FROM 
+    recruitment
+GROUP BY 
+    gender;
+-- tính tỉ lệ hiring thành công chung
+SELECT 
+    COUNT(case when Application_Status = 'Screening' then 1 end) AS total_applications,
+    COUNT(CASE WHEN joining_status = 'Yes' THEN 1 END) AS total_hired,
+    (COUNT(CASE WHEN joining_status = 'Yes' THEN 1 END) * 1.0) / COUNT(*) AS hiring_success_rate
+FROM 
+    recruitment
+
