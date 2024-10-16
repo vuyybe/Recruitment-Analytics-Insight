@@ -22,4 +22,4 @@ This dataset taken from https://www.youtube.com/@AnalyticswithNags
 
 ## **Visualization**
 Note: please sign in your Power BI account to access this link below
-https://app.powerbi.com/reportEmbed?reportId=542b69fb-5484-450e-ad78-99fe23319fa1&autoAuth=true&ctid=56f64fb7-cd17-48a9-8add-087222e99c24
+https://app.powerbi.com/reportEmbed?reportId=53a07542-9383-42a0-aec8-e1fcd86f4855&autoAuth=true&ctid=56f64fb7-cd17-48a9-8add-087222e99c24
